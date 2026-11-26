@@ -6,7 +6,7 @@
 <title>CyberRoute: The Network Architect - Simulator Jaringan Interaktif</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-dark: #070a13;
@@ -35,7 +35,7 @@
   body {
     background-color: var(--bg-dark);
     color: var(--text-main);
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Poppins', sans-serif;
     height: 100vh;
     width: 100vw;
     overflow: hidden;
@@ -2391,7 +2391,7 @@ function drawNodes() {
 
     // Node label text
     ctx.fillStyle = n.online ? '#f8fafc' : '#f87171';
-    ctx.font = '10.5px "Plus Jakarta Sans"';
+    ctx.font = '10.5px "Poppins", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(n.name, n.x, n.y + n.radius + 13);
 

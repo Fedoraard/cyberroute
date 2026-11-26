@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberRoute: The Network Architect - Simulator Jaringan Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #070a13;
+    --bg-card: rgba(15, 23, 42, 0.88);
+    --border-color: rgba(56, 189, 248, 0.22);
+    --cyan-neon: #38bdf8;
+    --cyan-glow: rgba(56, 189, 248, 0.35);
+    --green-neon: #10b981;
+    --green-glow: rgba(16, 185, 129, 0.35);
+    --amber-neon: #f59e0b;
+    --amber-glow: rgba(245, 158, 11, 0.35);
+    --red-neon: #f43f5e;
+    --red-glow: rgba(244, 63, 94, 0.45);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    background: radial-gradient(circle at 50% 50%, #0d172a 0%, #060913 100%);
+  }
+
+  /* ================== ZONA 1: HEADER HUD ================== */
+  header#hud {
+    height: 56px;
+    background: rgba(11, 17, 32, 0.95);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    z-index: 10;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+  }
+
+  .hud-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: var(--cyan-neon);
+    text-transform: uppercase;
+  }
+
+  .logo-badge .version {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #bae6fd;
+    letter-spacing: 0.5px;
+  }
+
+  .server-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green-neon);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    letter-spacing: 0.5px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--green-neon);
+    box-shadow: 0 0 8px var(--green-neon);
+    animation: pulse 1.6s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
+  }
+
+  .hud-center {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .budget-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+
+  .budget-title {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .budget-bar-bg {
+    width: 130px;
+    height: 8px;
+    background: #1e293b;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .budget-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--green-neon);
+    transition: width 0.25s ease-out, background-color 0.25s;
+    box-shadow: 0 0 8px var(--green-glow);
+  }
+
+  .budget-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #fff;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .ttl-box {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid var(--red-neon);
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: var(--red-neon);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .stars-hud {
+    display: flex;
+    gap: 4px;
+  }
+
+  .star-svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: #475569;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    transition: all 0.25s ease;
+  }
+
+  .star-svg.active {
+    fill: #facc15;
+    stroke: #facc15;
+    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.6));
+  }
+
+  .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hud-btn {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 6px 11px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hud-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+  }
+
+  .hud-btn:hover {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--cyan-neon);
+  }
+
+  /* ================== MAIN VIEWPORT ================== */
+  #main-viewport {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #arena-wrapper {
+    flex: 1;
+    position: relative;
+    background: transparent;
+  }
+
+  canvas#network-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+
+  #hazard-banner {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-90px);
+    background: rgba(244, 63, 94, 0.95);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.7);
+    border: 1px solid #fda4af;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 15;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+  }
+
+  #hazard-banner.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ZONA 3: PANEL INSPEKTOR KANAN */
+  aside#inspector-panel {
+    width: 320px;
+    background: rgba(11, 17, 32, 0.92);
+    border-left: 1px solid var(--border-color);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+    overflow-y: auto;
+    backdrop-filter: blur(8px);
+  }
+
+  .panel-header {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: var(--cyan-neon);
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    padding-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .inspector-card {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+  }
+
+  .card-label {
+    font-size: 9.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+
+  .card-data {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .node-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .node-health-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    background: rgba(30, 41, 59, 0.45);
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .node-tag-online {
+    color: var(--green-neon);
+    font-weight: 700;
+  }
+
+  .node-tag-offline {
+    color: var(--red-neon);
+    font-weight: 700;
+  }
+
+  .edu-insight-card {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #e2e8f0;
+  }
+
+  .edu-insight-title {
+    font-weight: 800;
+    color: var(--cyan-neon);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ================== ZONA 4 & 5: FOOTER CONTROLS ================== */
+  footer#control-bar {
+    height: 84px;
+    background: rgba(11, 17, 32, 0.96);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    z-index: 10;
+  }
+
+  .byte-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    max-width: 58%;
+  }
+
+  .byte-avatar-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0284c7 0%, #0f172a 100%);
+    border: 1.5px solid var(--cyan-neon);
+    box-shadow: 0 0 12px var(--cyan-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    color: #fff;
+  }
+
+  .byte-dialog-box {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    position: relative;
+    max-height: 68px;
+    overflow-y: auto;
+  }
+
+  .byte-name {
+    font-weight: 800;
+    color: var(--cyan-neon);
+    font-size: 10.5px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .byte-text {
+    color: #e2e8f0;
+  }
+
+  .action-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tool-btn {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid var(--border-color);
+    color: #cbd5e1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s ease;
+  }
+
+  .tool-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+  }
+
+  .tool-btn:hover {
+    background: rgba(56, 189, 248, 0.15);
+    color: #fff;
+    border-color: var(--cyan-neon);
+  }
+
+  .tool-btn.active {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: var(--cyan-neon);
+    color: var(--cyan-neon);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+  }
+
+  .btn-primary-launch {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border: 1px solid #6ee7b7;
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.5);
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary-launch svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.2;
+  }
+
+  .btn-primary-launch:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.75);
+  }
+
+  .btn-primary-launch:disabled {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .btn-primary-launch.danger {
+    background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%);
+    border-color: #fda4af;
+    box-shadow: 0 0 18px rgba(244, 63, 94, 0.6);
+  }
+
+  .btn-primary-launch.boss {
+    background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);
+    border-color: #fde68a;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+  }
+
+  /* ================== MODAL SCREENS ================== */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(3, 7, 18, 0.88);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px 28px;
+    max-width: 620px;
+    width: 90%;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+    position: relative;
+    color: var(--text-main);
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--cyan-neon);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-title svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+
+  .modal-body {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #cbd5e1;
+    margin-bottom: 20px;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .level-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .level-card {
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+
+  .level-card:hover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: var(--cyan-neon);
+    transform: translateY(-2px);
+  }
+
+  .level-card.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: #334155;
+    background: #1e293b;
+    pointer-events: none;
+  }
+
+  .level-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--cyan-neon);
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .level-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .level-desc {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .badge-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .badge-box {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: border-color 0.25s;
+  }
+
+  .badge-icon-box {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 6px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cyan-neon);
+  }
+
+  .badge-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--cyan-neon);
+    margin-bottom: 4px;
+  }
+
+  .badge-desc {
+    font-size: 9.5px;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  .reflect-item {
+    background: rgba(30, 41, 59, 0.55);
+    border-left: 3px solid var(--cyan-neon);
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 8px;
+    font-size: 11.5px;
+  }
+
+  .reflect-q {
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  .reflect-a {
+    color: #94a3b8;
+    font-size: 10.5px;
+  }
+
+  .step-box {
+    margin-bottom: 10px;
+    background: rgba(30, 41, 59, 0.4);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--green-neon);
+    font-size: 11.5px;
+  }
+
+  .step-box strong {
+    color: #fff;
+  }
+
+  @media (max-width: 860px) {
+    aside#inspector-panel {
+      width: 250px;
+    }
+    .byte-panel {
+      max-width: 45%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+
+  <!-- ================== ZONA 1: HEADER HUD ================== -->
+  <header id="hud">
+    <div class="hud-left">
+      <div class="logo-badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        <span>CyberRoute</span>
+        <span class="version">v2.4 Core</span>
+      </div>
+      <div class="server-status">
+        <div class="status-dot"></div>
+        <span>SERVER KELAS AKTIF</span>
+      </div>
+    </div>
+
+    <div class="hud-center">
+      <div class="budget-box">
+        <div class="budget-title">Kabel:</div>
+        <div class="budget-bar-bg">
+          <div id="budget-bar" class="budget-bar-fill"></div>
+        </div>
+        <div id="budget-text" class="budget-value">0m / 35m</div>
+      </div>
+
+      <div id="ttl-container" class="ttl-box">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span id="ttl-timer">45.0s</span>
+      </div>
+
+      <div class="stars-hud">
+        <svg id="star-1" class="star-svg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <svg id="star-2" class="star-svg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <svg id="star-3" class="star-svg" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      </div>
+    </div>
+
+    <div class="hud-right">
+      <button class="hud-btn" onclick="openModal('leaderboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+        <span>Peringkat</span>
+      </button>
+      <button class="hud-btn" onclick="openModal('badge-room')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg>
+        <span>Lencana</span>
+      </button>
+      <button class="hud-btn" onclick="toggleAudio()">
+        <svg id="audio-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        <span id="audio-label">Audio</span>
+      </button>
+      <button class="hud-btn" onclick="resetCurrentCables()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        <span>Reset</span>
+      </button>
+      <button class="hud-btn" onclick="openModal('menu')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Level</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================== MAIN VIEWPORT ================== -->
+  <div id="main-viewport">
+    
+    <!-- ZONA 2: ARENA TENGAH -->
+    <div id="arena-wrapper">
+      <div id="hazard-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span id="hazard-text">LASER GLITCH TERDETEKSI!</span>
+      </div>
+      <canvas id="network-canvas"></canvas>
+    </div>
+
+    <!-- ZONA 3: PANEL INSPEKTOR KANAN -->
+    <aside id="inspector-panel">
+      <div class="panel-header">
+        <span>Diagnosis Topologi</span>
+        <span id="current-level-tag" style="color: #94a3b8; font-size: 10px;">L1: STAR</span>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-label">Klasifikasi Arsitektur</div>
+        <div id="detected-topology" class="card-data" style="color: var(--cyan-neon);">Menganalisis...</div>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-label">Metrik Efisiensi Rute</div>
+        <div class="card-data"><span id="hop-counter" style="color: #facc15;">0</span> Hop <span id="hop-desc" style="font-size: 10px; color: #94a3b8;">(Belum Tersambung)</span></div>
+      </div>
+
+      <div class="inspector-card">
+        <div class="card-label">Status Node Perangkat</div>
+        <div id="node-health-container" class="node-health-list"></div>
+      </div>
+
+      <div class="edu-insight-card">
+        <div class="edu-insight-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          <span>Instruksi Arsitek</span>
+        </div>
+        <div id="edu-insight-text">
+          Tarik kabel dari setiap komputer klien menuju ke Server Pusat di tengah ruangan untuk membentuk Topologi Star!
+        </div>
+      </div>
+
+      <div id="spof-analysis-box" class="inspector-card" style="display: none; border-color: var(--amber-neon);">
+        <div class="card-label" style="color: var(--amber-neon);">Simulasi SPOF Interaktif</div>
+        <div style="font-size: 10.5px; color: #cbd5e1; margin-bottom: 8px;">
+          Uji konsekuensi jika Server Pusat (Hub) dilumpuhkan oleh GLITCH.
+        </div>
+        <button class="hud-btn" style="width: 100%; justify-content: center; border-color: var(--amber-neon); color: var(--amber-neon);" onclick="simulateSPOF()">
+          Uji Lumpuhkan Server Pusat
+        </button>
+      </div>
+
+      <div id="binary-trouble-box" class="inspector-card" style="display: none; border-color: var(--cyan-neon);">
+        <div class="card-label" style="color: var(--cyan-neon);">Binary Troubleshooting</div>
+        <div style="font-size: 10.5px; color: #cbd5e1; margin-bottom: 8px;">
+          Uji keberadaan sinyal di stasiun tengah untuk mengisolasi kerusakan.
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button class="hud-btn" style="font-size: 10px; justify-content: center;" onclick="testSignal('T4')">Uji Sinyal T4</button>
+          <button class="hud-btn" style="font-size: 10px; justify-content: center;" onclick="testSignal('T2')">Uji Sinyal T2</button>
+        </div>
+        <div id="signal-test-result" style="margin-top: 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #38bdf8;">
+          Pilih stasiun di atas untuk mendeteksi sinyal.
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ================== ZONA 4 & 5: FOOTER CONTROLS ================== -->
+  <footer id="control-bar">
+    
+    <!-- ZONA 4: PANEL DR. BYTE (KIRI BAWAH) -->
+    <div class="byte-panel">
+      <div class="byte-avatar-badge" title="Dr. Byte - AI System Terminal">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+          <rect x="9" y="9" width="6" height="6"></rect>
+          <line x1="9" y1="1" x2="9" y2="4"></line>
+          <line x1="15" y1="1" x2="15" y2="4"></line>
+          <line x1="9" y1="20" x2="9" y2="23"></line>
+          <line x1="15" y1="20" x2="15" y2="23"></line>
+          <line x1="20" y1="9" x2="23" y2="9"></line>
+          <line x1="20" y1="14" x2="23" y2="14"></line>
+          <line x1="1" y1="9" x2="4" y2="9"></line>
+          <line x1="1" y1="14" x2="4" y2="14"></line>
+        </svg>
+      </div>
+      <div class="byte-dialog-box">
+        <div class="byte-name">Dr. Byte • Terminal Panduan Sistem</div>
+        <div id="byte-speech" class="byte-text">
+          Selamat datang, Arsitek! Kantor Kelurahan baru dibuka tapi 5 komputernya belum terhubung. Sambungkan semuanya ke Server Pusat di tengah. Anggaran kabelmu 35 meter!
+        </div>
+      </div>
+    </div>
+
+    <!-- ZONA 5: TOOLBAR & TOMBOL AKSI UTAMA -->
+    <div class="action-toolbar">
+      <button id="tool-cable" class="tool-btn active" onclick="setTool('cable')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m18 15-6-6-6 6"></path><path d="M12 3v12"></path><circle cx="12" cy="19" r="2"></circle></svg>
+        <span>Tarik Kabel</span>
+      </button>
+      <button id="tool-delete" class="tool-btn" onclick="setTool('delete')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+        <span>Hapus Kabel</span>
+      </button>
+      <button id="tool-hint" class="tool-btn" onclick="useHint()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span id="hint-text">Hint (0/3)</span>
+      </button>
+
+      <button id="btn-main-action" class="btn-primary-launch" onclick="onMainActionClick()">
+        <svg id="btn-main-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span id="btn-main-label">KIRIM PAKET</span>
+      </button>
+    </div>
+
+  </footer>
+
+</div>
+
+<!-- ================== MODAL DIALOGS ================== -->
+
+<!-- 1. Menu & Pilih Level Modal -->
+<div id="modal-menu" class="modal-overlay active">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      <span>CyberRoute: The Network Architect</span>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 12px;">
+        Selamat datang di CyberCity. Sistem GLITCH melumpuhkan infrastruktur transmisi data kota. Anda ditugaskan merancang topologi jaringan yang efisien, tangguh, dan toleran terhadap kegagalan (<em>Fault Tolerant</em>) berdasar standar arsitektur jaringan komputer.
+      </p>
+
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 10.5px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Identitas Siswa / Kelompok:</label>
+        <input type="text" id="player-name-input" value="Kelompok Arsitek 1" style="width: 100%; background: #1e293b; border: 1px solid var(--border-color); color: #fff; padding: 7px 10px; border-radius: 6px; font-size: 12px; margin-top: 4px; font-family: inherit;">
+      </div>
+
+      <div style="font-size: 11px; font-weight: 700; color: var(--cyan-neon); margin-bottom: 8px; letter-spacing: 0.5px;">PILIH SKENARIO MISI:</div>
+      <div class="level-grid">
+        <div class="level-card" onclick="startLevel(1)">
+          <div class="level-badge">Level 1 • Topologi Star</div>
+          <div class="level-name">Kantor Kelurahan</div>
+          <div class="level-desc">Topologi Star, batas kabel 35m, uji Fault Isolation & SPOF.</div>
+        </div>
+        <div id="card-l2" class="level-card locked" onclick="startLevel(2)">
+          <div class="level-badge">Level 2 • Topologi Bus</div>
+          <div class="level-name">Gardu Industri Pabrik</div>
+          <div class="level-desc">Topologi Bus hemat 25m, T-Tap linier, Terminator & Binary Test.</div>
+        </div>
+        <div id="card-l3" class="level-card locked" onclick="startLevel(3)">
+          <div class="level-badge">Level 3 • Topologi Mesh</div>
+          <div class="level-name">Gateway Firewall</div>
+          <div class="level-desc">Partial Mesh 50m, redundansi failover otomatis (Zero Drop).</div>
+        </div>
+        <div id="card-l4" class="level-card locked" onclick="startLevel(4)">
+          <div class="level-badge" style="color: var(--amber-neon);">Level 4 • Krisis Blackout</div>
+          <div class="level-name">RS Darurat Kota</div>
+          <div class="level-desc">Arsitektur Hybrid terintegrasi, batas waktu TTL 45 detik, Dual Hazard.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="hud-btn" onclick="openModal('how-to-play')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+        <span>Petunjuk</span>
+      </button>
+      <button class="btn-primary-launch" onclick="startLevel(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span>Mulai Misi</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Victory Modal & Debriefing LKPD -->
+<div id="modal-victory" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title" style="color: var(--green-neon);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      <span id="vic-title">MISI SELESAI: EVALUASI ARSITEKTUR</span>
+    </div>
+    <div class="modal-body">
+      <p id="vic-desc" style="margin-bottom: 12px;">
+        Transmisi paket data berhasil mencapai simpul tujuan dengan verifikasi integritas penuh.
+      </p>
+
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--green-neon); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+        <div style="font-weight: 700; color: var(--green-neon); margin-bottom: 6px; font-size: 12px; letter-spacing: 0.5px;">Pencapaian Kriteria Kinerja:</div>
+        <div id="star-check-1" style="font-size: 11.5px; margin-bottom: 3px;">• Kriteria 1 (Delivery): Paket tiba di tujuan dengan status valid.</div>
+        <div id="star-check-2" style="font-size: 11.5px; margin-bottom: 3px;">• Kriteria 2 (Budget): Efisiensi kabel memenuhi target anggaran.</div>
+        <div id="star-check-3" style="font-size: 11.5px;">• Kriteria 3 (Fault Tolerance): Bertahan terhadap anomali pemutusan jalur.</div>
+      </div>
+
+      <div style="font-size: 11px; font-weight: 700; color: var(--cyan-neon); margin-bottom: 6px; letter-spacing: 0.5px;">REFLEKSI KONSEPTUAL ARSITEKTUR (LKPD):</div>
+      <div id="reflection-cards-box"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="hud-btn" onclick="exportReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Unduh Laporan</span>
+      </button>
+      <button class="hud-btn" onclick="retryCurrentLevel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        <span>Ulangi</span>
+      </button>
+      <button id="btn-next-mission" class="btn-primary-launch" onclick="goToNextLevel()">
+        <span>Misi Selanjutnya</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Leaderboard Modal -->
+<div id="modal-leaderboard" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+      <span>Papan Metrik Jaringan Siswa</span>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 12px; font-size: 11.5px; color: var(--text-muted);">
+        Perbandingan metrik efisiensi kabel, sisa waktu TTL, dan predikat keandalan arsitektur:
+      </p>
+      <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border-color); text-align: left; color: var(--cyan-neon);">
+            <th style="padding: 6px;">Peringkat</th>
+            <th style="padding: 6px;">Kelompok / Siswa</th>
+            <th style="padding: 6px;">Level</th>
+            <th style="padding: 6px;">Bintang</th>
+            <th style="padding: 6px;">Sisa Kabel</th>
+            <th style="padding: 6px;">Predikat</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="hud-btn" onclick="closeAllModals()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Badge Room Modal -->
+<div id="modal-badge-room" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg>
+      <span>Ruang Lencana & Sertifikasi Arsitek</span>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 12px; font-size: 11.5px; color: var(--text-muted);">
+        Kompetensi arsitektur jaringan yang telah diverifikasi melalui pengujian topologi:
+      </p>
+      <div class="badge-grid">
+        <div id="badge-1" class="badge-box">
+          <div class="badge-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          </div>
+          <div class="badge-title">Optimal Hop Route</div>
+          <div class="badge-desc">Menyelesaikan rute transmisi dengan jalur minimum hop.</div>
+        </div>
+        <div id="badge-2" class="badge-box">
+          <div class="badge-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div class="badge-title">Zero Packet Drop</div>
+          <div class="badge-desc">100% data selamat dari pemutusan kabel tanpa ada packet drop.</div>
+        </div>
+        <div id="badge-3" class="badge-box">
+          <div class="badge-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </div>
+          <div class="badge-title">Dynamic Failover</div>
+          <div class="badge-desc">Menerapkan failover otomatis saat jalur primer terputus.</div>
+        </div>
+      </div>
+      <div id="master-cert-card" style="margin-top: 14px; background: rgba(245, 158, 11, 0.08); border: 1px solid var(--amber-neon); border-radius: 8px; padding: 12px; text-align: center; display: none;">
+        <div style="font-weight: 800; color: var(--amber-neon); font-size: 13px; letter-spacing: 0.5px;">SERTIFIKASI: MASTER NETWORK ARCHITECT (GRADE A+)</div>
+        <div style="font-size: 11px; color: #cbd5e1; margin-top: 4px;">Diberikan atas keberhasilan menuntaskan krisis pemadaman CyberCity Blackout pada skenario Level 4!</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="hud-btn" onclick="closeAllModals()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. How to Play Modal -->
+<div id="modal-how-to-play" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+      <span>Panduan Arsitek CyberRoute</span>
+    </div>
+    <div class="modal-body">
+      <div class="step-box">
+        <strong>1. Menarik Kabel (Magnetic Snapping):</strong>
+        <p>Pilih alat <code>Tarik Kabel</code>, lalu klik/sentuh node awal, seret ke node tujuan, dan lepas. Lingkaran magnetis akan memandu koneksi.</p>
+      </div>
+      <div class="step-box">
+        <strong>2. Mengendalikan Cable Budget:</strong>
+        <p>Perhatikan indikator kabel di bagian atas. Setiap bentangan kabel mengonsumsi anggaran meter. Hapus kabel yang tidak efisien menggunakan alat <code>Hapus Kabel</code>.</p>
+      </div>
+      <div class="step-box">
+        <strong>3. Mengirim Paket Data:</strong>
+        <p>Klik tombol <code>KIRIM PAKET</code> untuk mensimulasikan aliran data. Sistem akan memverifikasi apakah paket dapat melintasi rute yang telah Anda bangun.</p>
+      </div>
+      <div class="step-box">
+        <strong>4. Analisis Ketahanan & Deteksi Gangguan:</strong>
+        <p>Gunakan panel kanan untuk melihat diagnosis topologi otomatis, menguji isolasi kabel terputus, atau mengevaluasi dampak SPOF (Single Point of Failure).</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary-launch" onclick="closeAllModals()">Mulai Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== GAME LOGIC SCRIPT ================== -->
+<script>
+/* ==================== WEB AUDIO SYNTHESIZER ==================== */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+  }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+  playClick() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.04);
+    } catch (e) {}
+  }
+  playConnect() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.1);
+    } catch (e) {}
+  }
+  playLaser() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1100, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.28);
+      gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.28);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.28);
+    } catch (e) {}
+  }
+  playSuccess() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const now = this.ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.08);
+        gain.gain.setValueAtTime(0.18, now + i * 0.08);
+        gain.gain.linearRampToValueAtTime(0, now + i * 0.08 + 0.22);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + i * 0.08);
+        osc.stop(now + i * 0.08 + 0.22);
+      });
+    } catch (e) {}
+  }
+  playDrop() {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(70, this.ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.35);
+    } catch (e) {}
+  }
+}
+const audio = new SoundEngine();
+
+function toggleAudio() {
+  audio.enabled = !audio.enabled;
+  const icon = document.getElementById('audio-icon-svg');
+  if (audio.enabled) {
+    icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+    document.getElementById('audio-label').textContent = 'Audio';
+    audio.playClick();
+  } else {
+    icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+    document.getElementById('audio-label').textContent = 'Mute';
+  }
+  saveState();
+}
+
+/* ==================== GAME STATE & CONFIGURATION ==================== */
+const Game = {
+  currentLevel: 1,
+  currentTool: 'cable', // 'cable', 'delete'
+  hintCount: 0,
+  maxHints: 3,
+  budgetMax: 35,
+  budgetUsed: 0,
+  ttlActive: false,
+  ttlRemaining: 45.0,
+  ttlTimerId: null,
+  stars: 0,
+  transmitting: false,
+  laserStriking: false,
+  failoverActive: false,
+  spofTriggered: false,
+  unlockedLevels: 1,
+  badges: {
+    shortestPath: false,
+    zeroDrop: false,
+    savior: false,
+    master: false
+  },
+  nodes: [],
+  cables: [],
+  dataBot: {
+    active: false,
+    waypoints: [],
+    currIndex: 0,
+    progress: 0,
+    onComplete: null
+  },
+  particles: []
+};
+
+const LevelData = {
+  1: {
+    title: "Level 1: Star Mission (Kantor Kelurahan)",
+    tag: "L1: STAR MISSION",
+    budget: 35,
+    budgetIdeal: 28,
+    hasTTL: false,
+    insight: "Hubungkan kelima komputer klien ke Server Pusat di tengah ruangan untuk membentuk Topologi Star terpusat.",
+    byteIntro: "Kantor Kelurahan baru dibuka, namun lima komputer staf belum tersambung ke Server Pusat. Hubungkan setiap komputer klien ke Server Pusat di tengah ruangan. Batas anggaran kabel adalah 35 meter.",
+    hints: [
+      "Tarik kabel mandiri dari masing-masing Klien 1 sampai Klien 5 langsung menuju Server Pusat.",
+      "Topologi Star mensyaratkan semua stasiun terhubung ke satu titik konsentrator (Server/Switch) tanpa koneksi langsung antar-klien.",
+      "Pastikan meteran kabel di bawah 35 meter, lalu klik Kirim Paket untuk memulai simulasi pengiriman data."
+    ],
+    reflections: [
+      { q: "Mengapa kerusakan kabel pada Klien 2 tidak mempengaruhi transmisi data Klien 5?", a: "Karena topologi Star mengimplementasikan saluran mandiri (dedicated link) untuk tiap stasiun ke konsentrator pusat." },
+      { q: "Apa yang dimaksud dengan Single Point of Failure (SPOF) pada topologi Star?", a: "Server Pusat adalah simpul tunggal sentral. Jika konsentrator pusat rusak, seluruh komunikasi antar-stasiun lumpuh total." }
+    ]
+  },
+  2: {
+    title: "Level 2: Bus Mission (Gardu Industri)",
+    tag: "L2: BUS MISSION",
+    budget: 25,
+    budgetIdeal: 18,
+    hasTTL: false,
+    insight: "Susun satu tulang punggung linier (backbone) bersambung dari stasiun T1 hingga T6 dengan terminasi kedua ujung.",
+    byteIntro: "Sektor industri pabrik membutuhkan arsitektur kabel berbiaya terendah dengan batas 25 meter. Rancang topologi Bus linier yang menyambungkan stasiun T1 sampai T6 secara berurutan.",
+    hints: [
+      "Tarik kabel berantai linier: T1 ke T2, T2 ke T3, T3 ke T4, T4 ke T5, dan T5 ke T6.",
+      "Topologi Bus tidak memakai konsentrator sentral; semua data melintasi satu segmen kabel bersama.",
+      "Setelah rantai terpasang utuh, klik Kirim Paket. Perhatikan apa yang terjadi saat terjadi pemutusan fisik di segmen tengah."
+    ],
+    reflections: [
+      { q: "Mengapa topologi Bus sangat hemat kabel tetapi rentan terhadap kegagalan masal?", a: "Hanya memerlukan satu jalur utama tanpa konsentrator aktif, namun putusnya satu titik backbone memutus semua stasiun di belakang titik rusak tersebut." },
+      { q: "Bagaimana metode Binary Troubleshooting melokalisasi kerusakan kabel?", a: "Dengan menguji sinyal pada simpul tengah (T4), teknisi langsung mengeliminasi separuh segmen jaringan yang masih sehat." }
+    ]
+  },
+  3: {
+    title: "Level 3: Mesh Mission (Gateway Firewall)",
+    tag: "L3: MESH MISSION",
+    budget: 50,
+    budgetIdeal: 42,
+    hasTTL: false,
+    insight: "Gerbang Firewall menuntut redundansi tinggi. Rancang Partial Mesh dengan jalur utama dan jalur cadangan lewat Node 4.",
+    byteIntro: "Gateway Firewall adalah simpul pertahanan kota yang tidak boleh mengalami kegagalan transmisi. Rancang Partial Mesh dengan jalur utama langsung dan jalur alternatif cadangan.",
+    hints: [
+      "Full Mesh (10 sambungan) melebihi batas anggaran 50 meter. Gunakan arsitektur Partial Mesh.",
+      "Tarik jalur primer langsung Node 1 -> Node 5, lalu tambahkan jalur cadangan Node 1 -> Node 4 dan Node 4 -> Node 5.",
+      "Jika laser GLITCH memutuskan jalur primer, mekanisme router akan langsung mengalihkan rute melalui Node 4 tanpa packet drop."
+    ],
+    reflections: [
+      { q: "Mengapa Partial Mesh lebih efisien dibanding Full Mesh pada kendala anggaran?", a: "Memberikan redundansi pada titik-titik transmisi vital tanpa beban biaya eksponensial dari n(n-1)/2 sambungan fisik." },
+      { q: "Apa keuntungan praktis dari arsitektur Dynamic Failover?", a: "Sistem jaringan dapat melakukan rerouting secara otonom dalam hitungan milidetik sehingga tidak ada paket data yang hilang (Zero Packet Drop)." }
+    ]
+  },
+  4: {
+    title: "Level 4: Boss Level (Krisis CyberCity Blackout)",
+    tag: "L4: BOSS SCENARIO",
+    budget: 130,
+    budgetIdeal: 110,
+    hasTTL: true,
+    insight: "Koridor utara lumpuh total. Hubungkan rute penyelamat koridor selatan (Gardu Industri & Gateway Firewall) sebelum TTL habis!",
+    byteIntro: "Darurat kota! RS Darurat kehabisan daya cadangan dan membutuhkan transfer rekam medis dari Pusat Komando ke Reaktor Inti Medis dalam 45 detik. Koridor utara rawan badai laser; bangun sambungan koridor selatan!",
+    hints: [
+      "Koridor utara (melalui Server RS dan Data Center) terputus oleh Dual Hazard.",
+      "Hubungkan rute selatan: Pusat Komando -> Gardu Industri -> Gateway Firewall -> Reaktor Inti Medis.",
+      "Selesaikan pemasangan seluruh sambungan sebelum hitungan mundur TTL 45 detik habis, lalu tekan tombol Kirim Paket Darurat!"
+    ],
+    reflections: [
+      { q: "Mengapa arsitektur Hybrid (gabungan Star, Bus, Mesh) menjadi standar infrastruktur kota cerdas?", a: "Karena memadukan keunggulan setiap topologi: kerapian Star di kantor cabang, efisiensi Bus di pabrik, dan keandalan tinggi Mesh pada gateway kritis." },
+      { q: "Apa prinsip mendasar ketahanan jaringan (Network Resilience)?", a: "Jaringan andal dirancang untuk mengantisipasi bencana dan memiliki kemampuan pemulihan diri mandiri (self-healing) secara cepat." }
+    ]
+  }
+};
+
+/* ==================== CANVAS INITIALIZATION & VECTOR DRAWING ==================== */
+const canvas = document.getElementById('network-canvas');
+const ctx = canvas.getContext('2d');
+let canvasWidth = 800;
+let canvasHeight = 600;
+
+function resizeCanvas() {
+  const container = document.getElementById('arena-wrapper');
+  canvasWidth = container.clientWidth || 800;
+  canvasHeight = container.clientHeight || 600;
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+}
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  setupNodes(Game.currentLevel, true);
+});
+
+/* NODE & CABLE MODELS */
+function setupNodes(level, keepCables = false) {
+  const oldCables = keepCables ? [...Game.cables] : [];
+  Game.nodes = [];
+  if (!keepCables) {
+    Game.cables = [];
+    Game.budgetUsed = 0;
+  }
+  Game.failoverActive = false;
+  Game.laserStriking = false;
+  Game.spofTriggered = false;
+
+  const cx = canvasWidth / 2;
+  const cy = canvasHeight / 2;
+
+  if (level === 1) {
+    Game.nodes.push({ id: 'server', name: 'Server Pusat', type: 'hub', x: cx, y: cy, online: true, radius: 28 });
+    const clientCount = 5;
+    const r = Math.min(canvasWidth, canvasHeight) * 0.32;
+    for (let i = 0; i < clientCount; i++) {
+      const angle = (i * 2 * Math.PI / clientCount) - Math.PI / 2;
+      Game.nodes.push({
+        id: `klien-${i+1}`,
+        name: `Klien ${i+1}`,
+        type: 'client',
+        x: cx + r * Math.cos(angle),
+        y: cy + r * Math.sin(angle),
+        online: true,
+        radius: 20
+      });
+    }
+  } else if (level === 2) {
+    const totalStations = 6;
+    const padding = Math.max(70, canvasWidth * 0.1);
+    const step = (canvasWidth - padding * 2) / (totalStations - 1);
+    const busY = cy;
+    for (let i = 0; i < totalStations; i++) {
+      Game.nodes.push({
+        id: `T${i+1}`,
+        name: `Stasiun T${i+1}`,
+        type: 'bus-node',
+        x: padding + i * step,
+        y: busY + (i % 2 === 0 ? -45 : 45),
+        online: true,
+        radius: 20
+      });
+    }
+  } else if (level === 3) {
+    const r = Math.min(canvasWidth, canvasHeight) * 0.33;
+    const nodeNames = ['Node 1 (Inlet)', 'Node 2 (Filter A)', 'Node 3 (Filter B)', 'Node 4 (Backup)', 'Node 5 (Outlet)'];
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
+      Game.nodes.push({
+        id: `node-${i+1}`,
+        name: nodeNames[i],
+        type: 'mesh-node',
+        x: cx + r * Math.cos(angle),
+        y: cy + r * Math.sin(angle),
+        online: true,
+        radius: 22
+      });
+    }
+  } else if (level === 4) {
+    const spanX = Math.min(canvasWidth * 0.38, 280);
+    const midX = Math.min(canvasWidth * 0.15, 110);
+    const spanY = Math.min(canvasHeight * 0.28, 140);
+    Game.nodes = [
+      { id: 'komando', name: 'Pusat Komando', type: 'city-core', x: cx - spanX, y: cy, online: true, radius: 26 },
+      { id: 'server-rs', name: 'Server RS (Star)', type: 'hospital', x: cx - midX, y: cy - spanY, online: true, radius: 24 },
+      { id: 'data-center', name: 'Data Center Kota', type: 'datacenter', x: cx + midX, y: cy - spanY, online: true, radius: 24 },
+      { id: 'gardu', name: 'Gardu Industri (Bus)', type: 'factory', x: cx - midX, y: cy + spanY, online: true, radius: 24 },
+      { id: 'gateway', name: 'Gateway Firewall', type: 'gateway', x: cx + midX, y: cy + spanY, online: true, radius: 24 },
+      { id: 'reaktor', name: 'Reaktor Inti Medis', type: 'reactor', x: cx + spanX, y: cy, online: true, radius: 28 }
+    ];
+  }
+
+  if (keepCables) {
+    Game.cables = oldCables;
+  }
+
+  updateInspector();
+  updateBudget();
+}
+
+function resetCurrentCables() {
+  Game.cables = [];
+  Game.budgetUsed = 0;
+  audio.playClick();
+  updateBudget();
+  updateInspector();
+  setDrByte("Seluruh bentangan kabel pada arena telah dibersihkan. Silakan rancang kembali arsitektur topologi Anda.");
+}
+
+/* ==================== DRAG & DROP CABLE CREATION ==================== */
+let dragStartNode = null;
+let mousePos = { x: 0, y: 0 };
+let isDragging = false;
+let hoveredNode = null;
+
+function getCanvasCoords(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top
+  };
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  const pos = getCanvasCoords(e.clientX, e.clientY);
+  handlePointerDown(pos.x, pos.y);
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const pos = getCanvasCoords(e.clientX, e.clientY);
+  handlePointerMove(pos.x, pos.y);
+});
+
+window.addEventListener('mouseup', () => {
+  handlePointerUp();
+});
+
+// Touch Device Support
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    e.preventDefault();
+    const pos = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+    handlePointerDown(pos.x, pos.y);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 1) {
+    e.preventDefault();
+    const pos = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+    handlePointerMove(pos.x, pos.y);
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', () => {
+  handlePointerUp();
+});
+
+function handlePointerDown(x, y) {
+  const clickedNode = findNodeNear(x, y);
+
+  if (Game.currentTool === 'cable' && clickedNode) {
+    dragStartNode = clickedNode;
+    isDragging = true;
+    mousePos = { x, y };
+    audio.playClick();
+  } else if (Game.currentTool === 'delete') {
+    deleteCableNear(x, y);
+  }
+}
+
+function handlePointerMove(x, y) {
+  mousePos.x = x;
+  mousePos.y = y;
+  hoveredNode = findNodeNear(x, y);
+}
+
+function handlePointerUp() {
+  if (isDragging && dragStartNode) {
+    const endNode = findNodeNear(mousePos.x, mousePos.y);
+    if (endNode && endNode.id !== dragStartNode.id) {
+      addCable(dragStartNode, endNode);
+    }
+  }
+  isDragging = false;
+  dragStartNode = null;
+}
+
+function findNodeNear(x, y) {
+  for (const node of Game.nodes) {
+    const dist = Math.hypot(node.x - x, node.y - y);
+    if (dist <= node.radius + 14) {
+      return node;
+    }
+  }
+  return null;
+}
+
+function addCable(nodeA, nodeB) {
+  const exists = Game.cables.some(c => 
+    (c.a === nodeA.id && c.b === nodeB.id) || (c.a === nodeB.id && c.b === nodeA.id)
+  );
+  if (exists) return;
+
+  const distPx = Math.hypot(nodeA.x - nodeB.x, nodeA.y - nodeB.y);
+  const meters = Math.max(3, Math.round(distPx * 0.08));
+
+  if (Game.budgetUsed + meters > Game.budgetMax * 1.5) {
+    showHazardBanner("KAPASITAS ANGGARAN KABEL MELEBIHI BATAS!");
+    return;
+  }
+
+  Game.cables.push({
+    a: nodeA.id,
+    b: nodeB.id,
+    length: meters,
+    status: 'normal'
+  });
+
+  audio.playConnect();
+  updateBudget();
+  updateInspector();
+}
+
+function deleteCableNear(x, y) {
+  let toRemove = -1;
+  for (let i = 0; i < Game.cables.length; i++) {
+    const c = Game.cables[i];
+    const na = Game.nodes.find(n => n.id === c.a);
+    const nb = Game.nodes.find(n => n.id === c.b);
+    if (na && nb) {
+      const d = distToSegment({ x, y }, na, nb);
+      if (d < 16) {
+        toRemove = i;
+        break;
+      }
+    }
+  }
+  if (toRemove !== -1) {
+    Game.cables.splice(toRemove, 1);
+    audio.playClick();
+    updateBudget();
+    updateInspector();
+  }
+}
+
+function distToSegment(p, v, w) {
+  const l2 = (v.x - w.x)**2 + (v.y - w.y)**2;
+  if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+/* ==================== GRAPH & TOPOLOGY ENGINE ==================== */
+function buildAdjacencyList(onlyNormal = true) {
+  const adj = new Map();
+  Game.nodes.forEach(n => adj.set(n.id, []));
+  Game.cables.forEach(c => {
+    if (onlyNormal && c.status === 'severed') return;
+    if (adj.has(c.a) && adj.has(c.b)) {
+      adj.get(c.a).push(c.b);
+      adj.get(c.b).push(c.a);
+    }
+  });
+  return adj;
+}
+
+function findShortestPath(startId, endId, onlyNormal = true) {
+  const adj = buildAdjacencyList(onlyNormal);
+  const queue = [[startId]];
+  const visited = new Set([startId]);
+
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const curr = path[path.length - 1];
+    if (curr === endId) return path;
+
+    const neighbors = adj.get(curr) || [];
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push([...path, neighbor]);
+      }
+    }
+  }
+  return null;
+}
+
+/* ==================== BUDGET & INSPECTOR ==================== */
+function updateBudget() {
+  Game.budgetUsed = Game.cables.reduce((acc, c) => acc + c.length, 0);
+  const percent = Math.min(100, Math.round((Game.budgetUsed / Game.budgetMax) * 100));
+  
+  const bar = document.getElementById('budget-bar');
+  const txt = document.getElementById('budget-text');
+  
+  bar.style.width = `${percent}%`;
+  txt.textContent = `${Game.budgetUsed}m / ${Game.budgetMax}m`;
+
+  const actionBtn = document.getElementById('btn-main-action');
+  if (Game.budgetUsed > Game.budgetMax) {
+    bar.style.backgroundColor = 'var(--red-neon)';
+    txt.style.color = 'var(--red-neon)';
+    actionBtn.disabled = true;
+  } else if (Game.budgetUsed > Game.budgetMax * 0.8) {
+    bar.style.backgroundColor = 'var(--amber-neon)';
+    txt.style.color = 'var(--amber-neon)';
+    actionBtn.disabled = false;
+  } else {
+    bar.style.backgroundColor = 'var(--green-neon)';
+    txt.style.color = '#fff';
+    actionBtn.disabled = false;
+  }
+}
+
+function updateInspector() {
+  const topoLabel = document.getElementById('detected-topology');
+  const hopVal = document.getElementById('hop-counter');
+  const hopDesc = document.getElementById('hop-desc');
+  const healthList = document.getElementById('node-health-container');
+
+  healthList.innerHTML = '';
+  Game.nodes.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'node-health-item';
+    div.innerHTML = `<span>${n.name}</span><span class="${n.online ? 'node-tag-online' : 'node-tag-offline'}">${n.online ? 'AKTIF' : 'PUTUS'}</span>`;
+    healthList.appendChild(div);
+  });
+
+  const cCount = Game.cables.length;
+  if (Game.currentLevel === 1) {
+    const hubConnected = Game.cables.filter(c => c.a === 'server' || c.b === 'server').length;
+    if (hubConnected >= 5) {
+      topoLabel.textContent = "Topologi Star (Lengkap)";
+      topoLabel.style.color = "var(--green-neon)";
+      hopVal.textContent = "2";
+      hopDesc.textContent = "(Klien ➔ Hub ➔ Klien)";
+    } else {
+      topoLabel.textContent = `Star Parsial (${hubConnected}/5)`;
+      topoLabel.style.color = "var(--cyan-neon)";
+      hopVal.textContent = hubConnected > 0 ? "1" : "0";
+      hopDesc.textContent = "(Tersambung Sebagian)";
+    }
+  } else if (Game.currentLevel === 2) {
+    const path = findShortestPath('T1', 'T6');
+    if (path && path.length === 6) {
+      topoLabel.textContent = "Topologi Bus (Backbone Utuh)";
+      topoLabel.style.color = "var(--green-neon)";
+      hopVal.textContent = "5";
+      hopDesc.textContent = "(Linier T1 ➔ T6)";
+    } else if (cCount >= 1) {
+      topoLabel.textContent = "Bus Belum Tersambung Penuh";
+      topoLabel.style.color = "var(--amber-neon)";
+      hopVal.textContent = path ? String(path.length - 1) : "0";
+      hopDesc.textContent = "(Jalur Linier Parsial)";
+    } else {
+      topoLabel.textContent = "Belum Ada Koneksi";
+      topoLabel.style.color = "var(--text-muted)";
+      hopVal.textContent = "0";
+      hopDesc.textContent = "(Terisolasi)";
+    }
+  } else if (Game.currentLevel === 3) {
+    if (cCount >= 8) {
+      topoLabel.textContent = "Full Mesh (Melebihi Kuota)";
+      topoLabel.style.color = "var(--red-neon)";
+    } else if (cCount >= 3) {
+      topoLabel.textContent = "Partial Mesh (Toleran)";
+      topoLabel.style.color = "var(--green-neon)";
+    } else {
+      topoLabel.textContent = "Mesh Belum Terhubung";
+      topoLabel.style.color = "var(--text-muted)";
+    }
+    hopVal.textContent = Game.failoverActive ? "2" : "1";
+    hopDesc.textContent = Game.failoverActive ? "(Reroute Cadangan)" : "(Jalur Primer Langsung)";
+  } else if (Game.currentLevel === 4) {
+    const hasSouth = findShortestPath('komando', 'reaktor');
+    if (hasSouth) {
+      topoLabel.textContent = "Topologi Hybrid (Detour Siap)";
+      topoLabel.style.color = "var(--green-neon)";
+      hopVal.textContent = String(hasSouth.length - 1);
+      hopDesc.textContent = "(Rute Koridor Selatan)";
+    } else {
+      topoLabel.textContent = "Topologi Hybrid Terputus";
+      topoLabel.style.color = "var(--amber-neon)";
+      hopVal.textContent = "0";
+      hopDesc.textContent = "(Rute Belum Terhubung)";
+    }
+  }
+}
+
+/* ==================== SIMULATION TRIGGERS ==================== */
+function onMainActionClick() {
+  if (Game.transmitting) return;
+
+  if (Game.currentLevel === 1) {
+    runLevel1Simulation();
+  } else if (Game.currentLevel === 2) {
+    runLevel2Simulation();
+  } else if (Game.currentLevel === 3) {
+    runLevel3Simulation();
+  } else if (Game.currentLevel === 4) {
+    runLevel4Simulation();
+  }
+}
+
+/* LEVEL 1: STAR */
+function runLevel1Simulation() {
+  const k1 = Game.nodes.find(n => n.id === 'klien-1');
+  const server = Game.nodes.find(n => n.id === 'server');
+  const k5 = Game.nodes.find(n => n.id === 'klien-5');
+
+  const hasK1 = Game.cables.some(c => (c.a === 'klien-1' && c.b === 'server') || (c.a === 'server' && c.b === 'klien-1'));
+  const hasK5 = Game.cables.some(c => (c.a === 'klien-5' && c.b === 'server') || (c.a === 'server' && c.b === 'klien-5'));
+
+  if (!hasK1 || !hasK5) {
+    setDrByte("Hubungkan minimal Klien 1 ke Server Pusat dan Server Pusat ke Klien 5 terlebih dahulu!");
+    return;
+  }
+
+  Game.transmitting = true;
+  setDrByte("Mengirim paket transmisi dari Klien 1 menuju Server Pusat...");
+  startDataBot([k1, server, k5], () => {
+    setTimeout(() => {
+      triggerLaserHazard('klien-2', 'server', () => {
+        showHazardBanner("LASER GLITCH MEMUTUS KABEL KLIEN 2!");
+        const k2 = Game.nodes.find(n => n.id === 'klien-2');
+        if (k2) k2.online = false;
+        updateInspector();
+
+        setDrByte("Perhatikan! Hanya simpul Klien 2 yang terputus, sedangkan aliran data Klien 1 ke Klien 5 tetap sukses berjalan. Inilah prinsip keunggulan Fault Isolation pada topologi Star!");
+        document.getElementById('spof-analysis-box').style.display = 'block';
+
+        setTimeout(() => {
+          Game.transmitting = false;
+          audio.playSuccess();
+          Game.badges.shortestPath = true;
+          updateBadgesUI();
+          showVictoryModal(1, 3);
+        }, 1600);
+      });
+    }, 1100);
+  });
+}
+
+function simulateSPOF() {
+  Game.spofTriggered = true;
+  audio.playLaser();
+  showHazardBanner("ANOMALI GLITCH MEMUTUS SERVER PUSAT (SPOF)!");
+  
+  Game.nodes.forEach(n => n.online = false);
+  updateInspector();
+  setDrByte("PERIKSA STATUS! Saat Server Pusat lumpuh, seluruh 5 komputer klien ikut terisolasi seketika. Hal ini membuktikan bahwa titik sentral konsentrator adalah Single Point of Failure (SPOF)!");
+  
+  setTimeout(() => {
+    Game.nodes.forEach(n => n.online = true);
+    const k2 = Game.nodes.find(n => n.id === 'klien-2');
+    if (k2) k2.online = false;
+    updateInspector();
+    Game.spofTriggered = false;
+  }, 3800);
+}
+
+/* LEVEL 2: BUS */
+function runLevel2Simulation() {
+  const pathIds = findShortestPath('T1', 'T6');
+  if (!pathIds || pathIds.length < 6) {
+    setDrByte("Sambungkan seluruh stasiun T1 hingga T6 secara linier membentuk satu rantai tulang punggung (backbone)!");
+    return;
+  }
+
+  const pathNodes = pathIds.map(id => Game.nodes.find(n => n.id === id));
+
+  Game.transmitting = true;
+  setDrByte("Paket meluncur menyusuri backbone linier menuju Stasiun T6...");
+
+  startDataBot(pathNodes, () => {
+    setTimeout(() => {
+      triggerLaserHazard('T2', 'T3', () => {
+        audio.playDrop();
+        showHazardBanner("PACKET DROPPED! JALUR BACKBONE PUTUS T2-T3!");
+        
+        ['T3', 'T4', 'T5', 'T6'].forEach(id => {
+          const node = Game.nodes.find(n => n.id === id);
+          if (node) node.online = false;
+        });
+        updateInspector();
+
+        setDrByte("PACKET DROPPED! Kelemahan mendasar Topologi Bus: tidak adanya rute alternatif. Pemutusan satu kabel melumpuhkan seluruh simpul di hilirnya. Gunakan panel Binary Troubleshooting di sebelah kanan!");
+        document.getElementById('binary-trouble-box').style.display = 'block';
+
+        const mainBtn = document.getElementById('btn-main-action');
+        mainBtn.classList.add('danger');
+        document.getElementById('btn-main-label').textContent = "COBA LAGI (RETRY)";
+        Game.transmitting = false;
+      });
+    }, 1100);
+  });
+}
+
+function testSignal(stationId) {
+  audio.playClick();
+  const res = document.getElementById('signal-test-result');
+  if (stationId === 'T4') {
+    res.textContent = "Probe T4: Sinyal Nihil (0V). Jalur transmisi terputus di hulu.";
+    res.style.color = "var(--red-neon)";
+  } else if (stationId === 'T2') {
+    res.textContent = "Probe T2: Sinyal Aktif Normal. Kerusakan terisolasi antara T2 dan T3!";
+    res.style.color = "var(--green-neon)";
+    setDrByte("Diagnosa berhasil! Dengan metode Binary Troubleshooting, Anda mengonfirmasi bahwa kerusakan terjadi tepat pada segmen T2-T3. Lanjutkan misi!");
+    setTimeout(() => {
+      showVictoryModal(2, 2);
+    }, 1800);
+  }
+}
+
+/* LEVEL 3: MESH */
+function runLevel3Simulation() {
+  const n1 = Game.nodes.find(n => n.id === 'node-1');
+  const n4 = Game.nodes.find(n => n.id === 'node-4');
+  const n5 = Game.nodes.find(n => n.id === 'node-5');
+
+  const hasPrimary = Game.cables.some(c => (c.a === 'node-1' && c.b === 'node-5') || (c.a === 'node-5' && c.b === 'node-1'));
+  const hasRedundant = Game.cables.some(c => (c.a === 'node-1' && c.b === 'node-4') || (c.a === 'node-4' && c.b === 'node-1')) &&
+                       Game.cables.some(c => (c.a === 'node-4' && c.b === 'node-5') || (c.a === 'node-5' && c.b === 'node-4'));
+
+  if (!hasPrimary) {
+    setDrByte("Tarik kabel jalur primer langsung dari Node 1 ke Node 5 terlebih dahulu!");
+    return;
+  }
+  if (!hasRedundant) {
+    setDrByte("Anggaran mencukupi! Pasang rute cadangan melalui Node 4 (Node 1 -> Node 4 -> Node 5) untuk menjamin redundansi!");
+    return;
+  }
+
+  Game.transmitting = true;
+  setDrByte("Mengirim paket transmisi pada rute primer (1 Hop)... Mendeteksi serangan laser!");
+
+  startDataBot([n1, n5], () => {
+    setTimeout(() => {
+      triggerLaserHazard('node-1', 'node-5', () => {
+        showHazardBanner("JALUR PRIMER TERPUTUS ANOMALI!");
+        setDrByte("Jalur primer terputus! Algoritma router mengaktifkan DYNAMIC FAILOVER ke rute cadangan...");
+        
+        Game.failoverActive = true;
+        updateInspector();
+
+        startDataBot([n1, n4, n5], () => {
+          audio.playSuccess();
+          Game.badges.zeroDrop = true;
+          Game.badges.savior = true;
+          updateBadgesUI();
+          setDrByte("VERIFIKASI BERHASIL! Paket tiba di simpul tujuan melalui Node 4 tanpa ada packet drop. Redundansi Partial Mesh terbukti andal!");
+          Game.transmitting = false;
+          showVictoryModal(3, 3);
+        });
+      });
+    }, 750);
+  });
+}
+
+/* LEVEL 4: BOSS SCENARIO */
+function runLevel4Simulation() {
+  const path = findShortestPath('komando', 'reaktor');
+  const usesSouth = path && path.includes('gardu') && path.includes('gateway');
+
+  if (!usesSouth) {
+    setDrByte("Koridor utara diputus GLITCH! Hubungkan koridor selatan: Pusat Komando -> Gardu Industri -> Gateway Firewall -> Reaktor Inti!");
+    return;
+  }
+
+  const nodesPath = path.map(id => Game.nodes.find(n => n.id === id));
+
+  Game.transmitting = true;
+  audio.playLaser();
+  showHazardBanner("DUAL HAZARD MEMUTUS KORIDOR UTARA!");
+  
+  Game.cables.forEach(c => {
+    if (c.a === 'server-rs' || c.b === 'server-rs' || c.a === 'data-center' || c.b === 'data-center') {
+      c.status = 'severed';
+    }
+  });
+
+  setDrByte("Koridor utara lumpuh! Transmisi dialihkan melalui Golden Detour koridor selatan...");
+
+  startDataBot(nodesPath, () => {
+    clearInterval(Game.ttlTimerId);
+    audio.playSuccess();
+    Game.badges.master = true;
+    updateBadgesUI();
+    setDrByte("DATA REKAM MEDIS DARURAT TIBA TEPAT WAKTU! Generator menyala, krisis blackout teratasi, dan gelar Master Network Architect resmi diraih!");
+    Game.transmitting = false;
+    showVictoryModal(4, 3);
+  });
+}
+
+/* DATA COURIER VECTOR ANIMATION */
+function startDataBot(waypoints, onComplete) {
+  Game.dataBot.active = true;
+  Game.dataBot.waypoints = waypoints;
+  Game.dataBot.currIndex = 0;
+  Game.dataBot.progress = 0;
+  Game.dataBot.onComplete = onComplete;
+}
+
+function triggerLaserHazard(idA, idB, callback) {
+  audio.playLaser();
+  Game.laserStriking = true;
+
+  const cable = Game.cables.find(c => (c.a === idA && c.b === idB) || (c.a === idB && c.b === idA));
+  if (cable) cable.status = 'severed';
+
+  const nA = Game.nodes.find(n => n.id === idA);
+  const nB = Game.nodes.find(n => n.id === idB);
+  if (nA && nB) {
+    const mx = (nA.x + nB.x) / 2;
+    const my = (nA.y + nB.y) / 2;
+    for (let i = 0; i < 28; i++) {
+      Game.particles.push({
+        x: mx,
+        y: my,
+        vx: (Math.random() - 0.5) * 7,
+        vy: (Math.random() - 0.5) * 7,
+        life: 1,
+        color: Math.random() > 0.5 ? '#f43f5e' : '#facc15'
+      });
+    }
+  }
+
+  setTimeout(() => {
+    Game.laserStriking = false;
+    if (callback) callback();
+  }, 380);
+}
+
+function showHazardBanner(text) {
+  const b = document.getElementById('hazard-banner');
+  document.getElementById('hazard-text').textContent = text;
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 3500);
+}
+
+function setDrByte(text) {
+  document.getElementById('byte-speech').textContent = text;
+}
+
+/* ==================== PROGRESSION & MODALS ==================== */
+function startLevel(lvl) {
+  if (lvl > Game.unlockedLevels) {
+    alert("Level ini masih terkunci! Selesaikan misi sebelumnya terlebih dahulu.");
+    return;
+  }
+  Game.currentLevel = lvl;
+  const cfg = LevelData[lvl];
+
+  document.getElementById('current-level-tag').textContent = cfg.tag;
+  document.getElementById('edu-insight-text').textContent = cfg.insight;
+  setDrByte(cfg.byteIntro);
+
+  Game.budgetMax = cfg.budget;
+  Game.hintCount = 0;
+  document.getElementById('hint-text').textContent = `Hint (0/3)`;
+
+  const mainBtn = document.getElementById('btn-main-action');
+  mainBtn.className = "btn-primary-launch";
+  if (lvl === 4) {
+    mainBtn.classList.add('boss');
+    document.getElementById('btn-main-label').textContent = "KIRIM PAKET DARURAT";
+  } else {
+    document.getElementById('btn-main-label').textContent = "KIRIM PAKET";
+  }
+
+  document.getElementById('spof-analysis-box').style.display = 'none';
+  document.getElementById('binary-trouble-box').style.display = 'none';
+
+  const ttlBox = document.getElementById('ttl-container');
+  if (cfg.hasTTL) {
+    ttlBox.style.display = 'flex';
+    startTTL(45.0);
+  } else {
+    ttlBox.style.display = 'none';
+    clearInterval(Game.ttlTimerId);
+  }
+
+  setupNodes(lvl);
+  closeAllModals();
+  audio.playClick();
+  saveState();
+}
+
+function startTTL(seconds) {
+  clearInterval(Game.ttlTimerId);
+  Game.ttlRemaining = seconds;
+  const el = document.getElementById('ttl-timer');
+  Game.ttlTimerId = setInterval(() => {
+    Game.ttlRemaining -= 0.1;
+    if (Game.ttlRemaining <= 0) {
+      Game.ttlRemaining = 0;
+      clearInterval(Game.ttlTimerId);
+      audio.playDrop();
+      showHazardBanner("WAKTU TTL HABIS! CADANGAN DAYA KELUAR BATAS!");
+      setDrByte("Waktu TTL habis sebelum paket tiba! Klik tombol Reset untuk menata rute kabel yang lebih ringkas.");
+      document.getElementById('btn-main-action').disabled = true;
+    }
+    el.textContent = `${Game.ttlRemaining.toFixed(1)}s`;
+  }, 100);
+}
+
+function showVictoryModal(lvl, stars) {
+  const cfg = LevelData[lvl];
+  const modal = document.getElementById('modal-victory');
+  
+  document.getElementById('star-check-1').textContent = "• Kriteria 1 (Delivery): Paket tiba di tujuan dengan status valid.";
+  document.getElementById('star-check-2').textContent = `• Kriteria 2 (Budget): Sisa kuota kabel ${Game.budgetMax - Game.budgetUsed}m (Batas ideal: ${cfg.budgetIdeal}m).`;
+  document.getElementById('star-check-3').textContent = "• Kriteria 3 (Fault Tolerance): Integritas jaringan bertahan terhadap anomali.";
+
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`star-${i}`).classList.toggle('active', i <= stars);
+  }
+
+  const box = document.getElementById('reflection-cards-box');
+  box.innerHTML = '';
+  cfg.reflections.forEach((r, idx) => {
+    const div = document.createElement('div');
+    div.className = 'reflect-item';
+    div.innerHTML = `<div class="reflect-q">${idx+1}. ${r.q}</div><div class="reflect-a">${r.a}</div>`;
+    box.appendChild(div);
+  });
+
+  if (lvl < 4 && Game.unlockedLevels < lvl + 1) {
+    Game.unlockedLevels = lvl + 1;
+    const nextCard = document.getElementById(`card-l${lvl+1}`);
+    if (nextCard) nextCard.classList.remove('locked');
+  }
+
+  recordLeaderboardEntry(lvl, stars);
+  saveState();
+  modal.classList.add('active');
+}
+
+function recordLeaderboardEntry(lvl, stars) {
+  const name = document.getElementById('player-name-input').value || 'Kelompok Arsitek';
+  const tbody = document.getElementById('leaderboard-body');
+  const grade = lvl === 4 ? 'Arsitek Master (Grade A+)' : (stars === 3 ? 'Sangat Baik (Grade A)' : 'Baik (Grade B)');
+  
+  const entries = [
+    { rank: 1, name: `${name} (Anda)`, lvl: `Level ${lvl}`, stars: `${stars} ★`, sisa: `${Game.budgetMax - Game.budgetUsed}m`, predikat: grade },
+    { rank: 2, name: 'Kelompok 1 (AlphaNet)', lvl: 'Level 3', stars: '3 ★', sisa: '12m', predikat: 'Grade A' },
+    { rank: 3, name: 'Kelompok 4 (CyberShield)', lvl: 'Level 2', stars: '2 ★', sisa: '8m', predikat: 'Grade B' },
+    { rank: 4, name: 'Kelompok 2 (VectorRoute)', lvl: 'Level 2', stars: '2 ★', sisa: '5m', predikat: 'Grade B' }
+  ];
+
+  tbody.innerHTML = '';
+  entries.forEach(e => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid rgba(56, 189, 248, 0.1)';
+    if (e.rank === 1) tr.style.backgroundColor = 'rgba(56, 189, 248, 0.12)';
+    tr.innerHTML = `
+      <td style="padding: 6px; font-weight: bold; color: ${e.rank===1 ? 'var(--cyan-neon)' : '#fff'};">#${e.rank}</td>
+      <td style="padding: 6px; font-weight: 600;">${e.name}</td>
+      <td style="padding: 6px;">${e.lvl}</td>
+      <td style="padding: 6px; color: #facc15;">${e.stars}</td>
+      <td style="padding: 6px; font-family: monospace;">${e.sisa}</td>
+      <td style="padding: 6px; color: var(--green-neon);">${e.predikat}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateBadgesUI() {
+  if (Game.badges.shortestPath) document.getElementById('badge-1').style.borderColor = 'var(--cyan-neon)';
+  if (Game.badges.zeroDrop) document.getElementById('badge-2').style.borderColor = 'var(--green-neon)';
+  if (Game.badges.savior) document.getElementById('badge-3').style.borderColor = 'var(--amber-neon)';
+  if (Game.badges.master) document.getElementById('master-cert-card').style.display = 'block';
+}
+
+function exportReport() {
+  const name = document.getElementById('player-name-input').value || 'Kelompok Arsitek';
+  const cfg = LevelData[Game.currentLevel];
+  let text = `========================================================\n`;
+  text += `CYBERROUTE: LAPORAN PRAKTIKUM ARSITEKTUR JARINGAN KOMPUTER\n`;
+  text += `========================================================\n`;
+  text += `Identitas Siswa / Kelompok : ${name}\n`;
+  text += `Tanggal Praktikum          : ${new Date().toLocaleDateString('id-ID')}\n`;
+  text += `Skenario Misi              : ${cfg.title}\n`;
+  text += `Penggunaan Kabel           : ${Game.budgetUsed}m / ${Game.budgetMax}m\n`;
+  text += `Hasil Evaluasi             : BERHASIL MEMENUHI SYARAT EVALUASI\n\n`;
+  text += `[REFLEKSI KONSEPTUAL ARSITEKTUR JARINGAN]:\n`;
+  cfg.reflections.forEach((r, i) => {
+    text += `${i+1}. Pertanyaan : ${r.q}\n`;
+    text += `   Analisis   : ${r.a}\n\n`;
+  });
+  text += `Status Sertifikasi: Lencana Terverifikasi Sistem CyberRoute.\n`;
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CyberRoute_Laporan_Level${Game.currentLevel}_${name.replace(/\s+/g, '_')}.txt`;
+  a.click();
+  audio.playClick();
+}
+
+function retryCurrentLevel() {
+  closeAllModals();
+  startLevel(Game.currentLevel);
+}
+
+function goToNextLevel() {
+  closeAllModals();
+  if (Game.currentLevel < 4) {
+    startLevel(Game.currentLevel + 1);
+  } else {
+    openModal('badge-room');
+  }
+}
+
+function setTool(tool) {
+  Game.currentTool = tool;
+  document.getElementById('tool-cable').classList.toggle('active', tool === 'cable');
+  document.getElementById('tool-delete').classList.toggle('active', tool === 'delete');
+  audio.playClick();
+}
+
+function useHint() {
+  if (Game.hintCount >= Game.maxHints) {
+    setDrByte("Batas tiga hint telah digunakan pada skenario ini. Analisis topologi berdasarkan konsep dasar jaringan.");
+    return;
+  }
+  const cfg = LevelData[Game.currentLevel];
+  setDrByte(`PETUNJUK ${Game.hintCount + 1}: ${cfg.hints[Game.hintCount]}`);
+  Game.hintCount++;
+  document.getElementById('hint-text').textContent = `Hint (${Game.hintCount}/3)`;
+  audio.playClick();
+}
+
+function openModal(id) {
+  closeAllModals();
+  const m = document.getElementById(`modal-${id}`);
+  if (m) m.classList.add('active');
+  audio.playClick();
+}
+
+function closeAllModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+}
+
+/* ==================== STATE PERSISTENCE ==================== */
+function saveState() {
+  try {
+    const data = {
+      unlockedLevels: Game.unlockedLevels,
+      badges: Game.badges,
+      playerName: document.getElementById('player-name-input').value,
+      audioEnabled: audio.enabled
+    };
+    localStorage.setItem('cyberroute_state', JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('cyberroute_state');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.unlockedLevels) {
+        Game.unlockedLevels = data.unlockedLevels;
+        for (let i = 2; i <= Game.unlockedLevels; i++) {
+          const c = document.getElementById(`card-l${i}`);
+          if (c) c.classList.remove('locked');
+        }
+      }
+      if (data.badges) {
+        Game.badges = data.badges;
+        updateBadgesUI();
+      }
+      if (data.playerName) {
+        document.getElementById('player-name-input').value = data.playerName;
+      }
+      if (typeof data.audioEnabled === 'boolean' && !data.audioEnabled) {
+        toggleAudio();
+      }
+    }
+  } catch (e) {}
+}
+
+/* ==================== VECTOR GRAPHICS RENDER LOOP ==================== */
+function render() {
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+  drawGrid();
+  drawCables();
+
+  // Active drag line
+  if (isDragging && dragStartNode) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(dragStartNode.x, dragStartNode.y);
+    ctx.lineTo(mousePos.x, mousePos.y);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 6]);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Hover magnetic ring
+  if (hoveredNode) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(hoveredNode.x, hoveredNode.y, hoveredNode.radius + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawNodes();
+  updateAndDrawDataBot();
+  updateAndDrawParticles();
+
+  requestAnimationFrame(render);
+}
+
+function drawGrid() {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.035)';
+  ctx.lineWidth = 1;
+  const gridSize = 28;
+  for (let x = 0; x < canvasWidth; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvasHeight);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvasHeight; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvasWidth, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCables() {
+  ctx.save();
+  Game.cables.forEach(c => {
+    const na = Game.nodes.find(n => n.id === c.a);
+    const nb = Game.nodes.find(n => n.id === c.b);
+    if (!na || !nb) return;
+
+    ctx.beginPath();
+    ctx.moveTo(na.x, na.y);
+    ctx.lineTo(nb.x, nb.y);
+
+    if (c.status === 'severed') {
+      ctx.strokeStyle = '#f43f5e';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      const mx = (na.x + nb.x) / 2;
+      const my = (na.y + nb.y) / 2;
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath();
+      ctx.arc(mx, my, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (Game.failoverActive && (c.a === 'node-4' || c.b === 'node-4')) {
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+    }
+
+    // Distance label
+    const midX = (na.x + nb.x) / 2;
+    const midY = (na.y + nb.y) / 2;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(midX - 13, midY - 8, 26, 16);
+    ctx.strokeRect(midX - 13, midY - 8, 26, 16);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '9.5px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${c.length}m`, midX, midY);
+  });
+  ctx.restore();
+}
+
+/* VECTOR SCHEMATIC NODE ICONS (ZERO EMOJIS) */
+function drawNodes() {
+  Game.nodes.forEach(n => {
+    ctx.save();
+    
+    // Halo glow
+    ctx.shadowBlur = n.online ? 14 : 4;
+    ctx.shadowColor = n.online ? (n.type === 'hub' ? '#facc15' : '#38bdf8') : '#f43f5e';
+
+    // Outer circle container
+    ctx.fillStyle = n.online ? (n.type === 'hub' ? '#1e293b' : '#0f172a') : '#2a1118';
+    ctx.strokeStyle = n.online ? (n.type === 'hub' ? '#facc15' : '#38bdf8') : '#f43f5e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner vector blueprint rendering
+    ctx.shadowBlur = 0;
+    drawVectorNodeGraphic(n.type, n.x, n.y, n.radius, n.online);
+
+    // Node label text
+    ctx.fillStyle = n.online ? '#f8fafc' : '#f87171';
+    ctx.font = '10.5px "Plus Jakarta Sans"';
+    ctx.textAlign = 'center';
+    ctx.fillText(n.name, n.x, n.y + n.radius + 13);
+
+    ctx.restore();
+  });
+}
+
+function drawVectorNodeGraphic(type, x, y, r, online) {
+  ctx.save();
+  ctx.strokeStyle = online ? '#38bdf8' : '#f43f5e';
+  ctx.fillStyle = online ? '#38bdf8' : '#f43f5e';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const s = r * 0.55;
+
+  if (type === 'hub') {
+    // Server Rack Chassis with 3 module lines and LED indicator
+    ctx.strokeRect(x - s, y - s * 0.8, s * 2, s * 1.6);
+    ctx.beginPath();
+    ctx.moveTo(x - s, y);
+    ctx.lineTo(x + s, y);
+    ctx.stroke();
+    // LED blinking dots
+    ctx.fillStyle = online ? '#10b981' : '#f43f5e';
+    ctx.beginPath();
+    ctx.arc(x + s * 0.5, y - s * 0.4, 1.8, 0, Math.PI * 2);
+    ctx.arc(x + s * 0.5, y + s * 0.4, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (type === 'client') {
+    // Workstation Desktop Monitor + Stand
+    ctx.strokeRect(x - s, y - s * 0.7, s * 2, s * 1.2);
+    ctx.beginPath();
+    ctx.moveTo(x, y + s * 0.5);
+    ctx.lineTo(x, y + s * 0.9);
+    ctx.moveTo(x - s * 0.5, y + s * 0.9);
+    ctx.lineTo(x + s * 0.5, y + s * 0.9);
+    ctx.stroke();
+  } else if (type === 'bus-node') {
+    // Coaxial T-Tap Substation Box with bus connection indicator
+    ctx.strokeRect(x - s * 0.8, y - s * 0.8, s * 1.6, s * 1.6);
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.8);
+    ctx.lineTo(x, y + s * 0.8);
+    ctx.moveTo(x - s * 0.8, y);
+    ctx.lineTo(x + s * 0.8, y);
+    ctx.stroke();
+  } else if (type === 'mesh-node') {
+    // Firewall Shield Polygon
+    ctx.beginPath();
+    ctx.moveTo(x, y - s);
+    ctx.lineTo(x + s, y - s * 0.5);
+    ctx.lineTo(x + s, y + s * 0.4);
+    ctx.lineTo(x, y + s);
+    ctx.lineTo(x - s, y + s * 0.4);
+    ctx.lineTo(x - s, y - s * 0.5);
+    ctx.closePath();
+    ctx.stroke();
+  } else if (type === 'city-core') {
+    // Command Center Concentric Target Rings
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.8, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (type === 'hospital') {
+    // Medical Cross Contour
+    const w = s * 0.35;
+    ctx.beginPath();
+    ctx.moveTo(x - w, y - s);
+    ctx.lineTo(x + w, y - s);
+    ctx.lineTo(x + w, y - w);
+    ctx.lineTo(x + s, y - w);
+    ctx.lineTo(x + s, y + w);
+    ctx.lineTo(x + w, y + w);
+    ctx.lineTo(x + w, y + s);
+    ctx.lineTo(x - w, y + s);
+    ctx.lineTo(x - w, y + w);
+    ctx.lineTo(x - s, y + w);
+    ctx.lineTo(x - s, y - w);
+    ctx.lineTo(x - w, y - w);
+    ctx.closePath();
+    ctx.stroke();
+  } else if (type === 'datacenter') {
+    // Clustered Server Blade Stack
+    ctx.strokeRect(x - s, y - s, s * 2, s * 0.5);
+    ctx.strokeRect(x - s, y - s * 0.25, s * 2, s * 0.5);
+    ctx.strokeRect(x - s, y + s * 0.5, s * 2, s * 0.5);
+  } else if (type === 'factory') {
+    // Industrial Grid Substation symbol
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - s * 0.7, y);
+    ctx.lineTo(x + s * 0.7, y);
+    ctx.moveTo(x, y - s * 0.7);
+    ctx.lineTo(x, y + s * 0.7);
+    ctx.stroke();
+  } else if (type === 'gateway') {
+    // Gateway Dual Concentric Hexagon
+    ctx.beginPath();
+    ctx.arc(x, y, s, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (type === 'reactor') {
+    // Quantum Orbital Reactor Rings
+    ctx.beginPath();
+    ctx.ellipse(x, y, s, s * 0.4, Math.PI / 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(x, y, s, s * 0.4, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function updateAndDrawDataBot() {
+  const bot = Game.dataBot;
+  if (!bot.active || !bot.waypoints || bot.waypoints.length < 2) return;
+
+  const currentWp = bot.waypoints[bot.currIndex];
+  const nextWp = bot.waypoints[bot.currIndex + 1];
+
+  bot.progress += 0.024;
+  if (bot.progress >= 1) {
+    bot.progress = 0;
+    bot.currIndex++;
+    if (bot.currIndex >= bot.waypoints.length - 1) {
+      bot.active = false;
+      if (bot.onComplete) bot.onComplete();
+      return;
+    }
+  }
+
+  const curX = currentWp.x + (nextWp.x - currentWp.x) * bot.progress;
+  const curY = currentWp.y + (nextWp.y - currentWp.y) * bot.progress;
+
+  // High-Tech Cybernetic Data Packet Courier
+  ctx.save();
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(curX, curY, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(curX, curY, 9, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Trail particle emission
+  if (Math.random() > 0.4) {
+    Game.particles.push({
+      x: curX,
+      y: curY,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1.5,
+      life: 0.6,
+      color: '#38bdf8'
+    });
+  }
+  ctx.restore();
+}
+
+function updateAndDrawParticles() {
+  for (let i = Game.particles.length - 1; i >= 0; i--) {
+    const p = Game.particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 0.035;
+    if (p.life <= 0) {
+      Game.particles.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// Initial Boot
+window.onload = () => {
+  resizeCanvas();
+  loadState();
+  setupNodes(1);
+  recordLeaderboardEntry(1, 3);
+  requestAnimationFrame(render);
+};
+</script>
+
+</body>
+</html>
